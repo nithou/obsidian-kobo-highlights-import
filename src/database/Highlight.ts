@@ -144,7 +144,7 @@ export class HighlightService {
 				foundContent = c;
 			}
 
-			if (c.contentId === bookmark.contentId && foundContent) {
+			if (c.contentId === originalContent.contentId && foundContent) {
 				return foundContent;
 			}
 		}

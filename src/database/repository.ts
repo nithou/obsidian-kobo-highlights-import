@@ -119,6 +119,16 @@ export class Repository {
 		const contents = this.parseContentStatement(statement);
 		statement.free();
 
+		const exactMatches = contents.filter(c => c.contentId === contentId || c.contentId.endsWith(contentId));
+		if (exactMatches.length > 0) {
+			if (exactMatches.length > 1) {
+				console.warn(
+					`filtering by contentId yielded more then 1 result: ${contentId}, using the first result.`,
+				);
+			}
+			return exactMatches[0];
+		}
+
 		if (contents.length > 1) {
 			console.warn(
 				`filtering by contentId yielded more then 1 result: ${contentId}, using the first result.`,
@@ -195,7 +205,7 @@ export class Repository {
 
 		const row = statement.get();
 
-		if (row.length == 0 || row[0] == null) {
+		if (row.length == 0) {
 			console.debug(
 				"Used query: select Attribution, Description, Publisher, DateLastRead, ReadStatus, ___PercentRead, ISBN, Series, SeriesNumber, TimeSpentReading from content where Title = $title limit 2;",
 				{ $title: bookTitle, result: row },
@@ -207,7 +217,7 @@ export class Repository {
 
 		return {
 			title: bookTitle,
-			author: row[0].toString(),
+			author: row[0]?.toString() ?? "Unknown Author",
 			description: row[1]?.toString(),
 			publisher: row[2]?.toString(),
 			dateLastRead: row[3] ? new Date(row[3].toString()) : undefined,
