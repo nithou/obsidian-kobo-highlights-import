@@ -5,7 +5,7 @@ import { sanitize } from "sanitize-filename-ts";
 import SqlJs from "sql.js";
 import { binary } from "src/binaries/sql-wasm";
 import { HighlightService } from "src/database/Highlight";
-import { Bookmark } from "src/database/interfaces";
+import { Highlight } from "src/database/interfaces";
 import { Repository } from "src/database/repository";
 import { ImportContext } from "src/errors/ImportContext";
 import { KoboHighlightsImporterSettings } from "src/settings/Settings";
@@ -77,28 +77,29 @@ export class ExtractHighlightsModal extends Modal {
 			);
 		}
 
-		const content = service.convertToMap(highlights);
-
-		const allBooksContent = new Map<string, Map<string, Bookmark[]>>();
-
-		for (const [bookTitle, chapters] of content) {
-			allBooksContent.set(bookTitle, chapters);
+		// Group highlights by book title.
+		const highlightsByBook = new Map<string, Highlight[]>();
+		for (const h of highlights) {
+			const bookTitle =
+				h.content.bookTitle ||
+				h.content.title ||
+				service.unknownBookTitle;
+			if (!highlightsByBook.has(bookTitle))
+				highlightsByBook.set(bookTitle, []);
+			highlightsByBook.get(bookTitle)!.push(h);
 		}
 
+		// Include books with no highlights when the setting is enabled.
 		if (this.settings.importAllBooks) {
 			const allBooks = service.getAllBooks();
-
-			for (const [bookTitle, _] of allBooks) {
-				if (!allBooksContent.has(bookTitle)) {
-					allBooksContent.set(
-						bookTitle,
-						service.createEmptyContentMap(),
-					);
+			for (const [bookTitle] of allBooks) {
+				if (!highlightsByBook.has(bookTitle)) {
+					highlightsByBook.set(bookTitle, []);
 				}
 			}
 		}
 
-		await this.writeBooks(service, allBooksContent, context);
+		await this.writeBooks(service, highlightsByBook, context);
 
 		if (this.settings.importVocabulary) {
 			await this.importVocabulary(service, context);
@@ -109,7 +110,7 @@ export class ExtractHighlightsModal extends Modal {
 
 	private async writeBooks(
 		service: HighlightService,
-		content: Map<string, Map<string, Bookmark[]>>,
+		highlightsByBook: Map<string, Highlight[]>,
 		context: ImportContext,
 	) {
 		const template = await getTemplateContents(
@@ -117,14 +118,14 @@ export class ExtractHighlightsModal extends Modal {
 			this.settings.templatePath,
 		);
 
-		for (const [bookTitle, chapters] of content) {
+		for (const [bookTitle, bookHighlights] of highlightsByBook) {
 			const sanitizedBookName = sanitize(bookTitle);
 			const fileName = normalizePath(
 				`${this.settings.storageFolder}/${sanitizedBookName}.md`,
 			);
 
-			const details =
-				service.getBookDetailsFromBookTitle(bookTitle);
+			const chapters = service.buildChapterList(bookHighlights);
+			const details = service.getBookDetailsFromBookTitle(bookTitle);
 
 			const newContent = applyTemplateTransformations(
 				template,
@@ -135,7 +136,7 @@ export class ExtractHighlightsModal extends Modal {
 			await this.writeFileNonDestructive(fileName, newContent);
 
 			context.booksImported++;
-			for (const bookmarks of chapters.values()) {
+			for (const [, bookmarks] of chapters) {
 				context.highlightsImported += bookmarks.length;
 			}
 		}

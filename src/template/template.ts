@@ -84,17 +84,16 @@ ${HIGHLIGHTS_BLOCK}
 
 export function applyTemplateTransformations(
 	rawTemplate: string,
-	chapters: Map<chapter, Bookmark[]>,
+	chapters: [chapter, Bookmark[]][],
 	bookDetails: BookDetails,
 ): string {
 	const processed = preprocessShorthandSyntax(rawTemplate);
-	const chaptersArr = Array.from(chapters.entries());
 
 	let rendered: string;
 	try {
 		const result = eta.renderString(processed, {
 			bookDetails,
-			chapters: chaptersArr,
+			chapters,
 			ReadStatus,
 		});
 		if (result === null) {
