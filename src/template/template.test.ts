@@ -1,6 +1,7 @@
 import * as chai from "chai";
 import { applyTemplateTransformations, defaultTemplate } from "./template";
 import { HighlightService, chapter } from "../database/Highlight";
+import { Repository } from "../database/repository";
 import { Bookmark, Highlight } from "../database/interfaces";
 
 describe("template", async function () {
@@ -365,7 +366,7 @@ isbn: { { ISBN } }
 			},
 		];
 
-		const service = new HighlightService(null as any);
+		const service = new HighlightService(null as unknown as Repository);
 		const dedupChapters = service.buildChapterList(highlights);
 
 		chai.expect(dedupChapters).to.have.length(2);

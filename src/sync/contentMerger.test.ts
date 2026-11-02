@@ -5,7 +5,7 @@ describe("contentMerger", function () {
 	describe("extractPersonalNotes", function () {
 		it("returns null when heading is absent", function () {
 			const content = `# Book Title\n\n## Highlights\n\nSome text`;
-			expect(extractPersonalNotes(content)).to.be.null;
+			expect(extractPersonalNotes(content)).to.equal(null);
 		});
 
 		it("extracts content from heading to EOF when last section", function () {

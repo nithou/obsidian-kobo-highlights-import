@@ -51,6 +51,7 @@ export class ExtractHighlightsModal extends Modal {
 		try {
 			db = new SQLEngine.Database(new Uint8Array(this.fileBuffer));
 		} catch (e) {
+			console.error("Failed to open SQLite database:", e);
 			throw new Error(
 				"Could not read SQLite file — is this a valid KoboReader.sqlite?",
 			);
