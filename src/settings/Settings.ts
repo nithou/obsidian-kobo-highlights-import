@@ -137,16 +137,14 @@ export class KoboHighlightsImporterSettingsTab extends PluginSettingTab {
 	add_import_vocabulary(): void {
 		new Setting(this.containerEl)
 			.setName("Import vocabulary")
-			.setDesc(
-				"Import looked-up words from your Kobo's My Words feature",
-			)
+			.setDesc("Import looked-up words from your Kobo's My Words feature")
 			.addToggle((cb) => {
-				cb.setValue(
-					this.plugin.settings.importVocabulary,
-				).onChange(async (toggle) => {
-					this.plugin.settings.importVocabulary = toggle;
-					await this.plugin.saveSettings();
-				});
+				cb.setValue(this.plugin.settings.importVocabulary).onChange(
+					async (toggle) => {
+						this.plugin.settings.importVocabulary = toggle;
+						await this.plugin.saveSettings();
+					},
+				);
 			});
 	}
 

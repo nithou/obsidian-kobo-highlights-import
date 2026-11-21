@@ -70,20 +70,20 @@ readStatus: {{ReadStatus}}
 
 Available shorthand variables:
 
-| Shorthand | Description |
-| --- | --- |
-| `{{Title}}` | Book title |
-| `{{Author}}` | Book author |
-| `{{Description}}` | Book description |
-| `{{DateLastRead}}` | Last read date (ISO format) |
-| `{{ISBN}}` | ISBN number |
-| `{{ReadStatus}}` | Read status label (Unknown, Unopened, Reading, Read) |
-| `{{Publisher}}` | Publisher name |
-| `{{Series}}` | Series name |
-| `{{SeriesNumber}}` | Number in series |
-| `{{PercentRead}}` | Reading progress percentage |
-| `{{TimeSpentReading}}` | Time spent reading (seconds) |
-| `{{highlights}}` | Full highlights section with chapters, text, notes, and dates |
+| Shorthand              | Description                                                   |
+| ---------------------- | ------------------------------------------------------------- |
+| `{{Title}}`            | Book title                                                    |
+| `{{Author}}`           | Book author                                                   |
+| `{{Description}}`      | Book description                                              |
+| `{{DateLastRead}}`     | Last read date (ISO format)                                   |
+| `{{ISBN}}`             | ISBN number                                                   |
+| `{{ReadStatus}}`       | Read status label (Unknown, Unopened, Reading, Read)          |
+| `{{Publisher}}`        | Publisher name                                                |
+| `{{Series}}`           | Series name                                                   |
+| `{{SeriesNumber}}`     | Number in series                                              |
+| `{{PercentRead}}`      | Reading progress percentage                                   |
+| `{{TimeSpentReading}}` | Time spent reading (seconds)                                  |
+| `{{highlights}}`       | Full highlights section with chapters, text, notes, and dates |
 
 ### Eta syntax
 
@@ -121,12 +121,12 @@ You can mix both syntaxes in the same template. See the [Eta.js template syntax 
 
 The following variables are available in Eta templates:
 
-| Variable | Type / Structure | Description |
-| --- | --- | --- |
-| `bookDetails` | Object | Book metadata: `title`, `author`, `publisher`, `dateLastRead`, `readStatus`, `percentRead`, `isbn`, `series`, `seriesNumber`, `timeSpentReading`, `description` |
-| `chapters` | Array of `[chapterName, highlights]` | Each `highlights` is an array of bookmarks for that chapter |
-| `ReadStatus` | Enum mapping | Maps read status values to their string labels |
-| `highlight` | Object | Each highlight/bookmark: `bookmarkId`, `text`, `contentId`, `note` (optional annotation), `dateCreated` ([Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date)), `color` (optional: 0=yellow, 1=red, 2=blue, 3=green) |
+| Variable      | Type / Structure                     | Description                                                                                                                                                                                                                                                   |
+| ------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bookDetails` | Object                               | Book metadata: `title`, `author`, `publisher`, `dateLastRead`, `readStatus`, `percentRead`, `isbn`, `series`, `seriesNumber`, `timeSpentReading`, `description`                                                                                               |
+| `chapters`    | Array of `[chapterName, highlights]` | Each `highlights` is an array of bookmarks for that chapter                                                                                                                                                                                                   |
+| `ReadStatus`  | Enum mapping                         | Maps read status values to their string labels                                                                                                                                                                                                                |
+| `highlight`   | Object                               | Each highlight/bookmark: `bookmarkId`, `text`, `contentId`, `note` (optional annotation), `dateCreated` ([Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date)), `color` (optional: 0=yellow, 1=red, 2=blue, 3=green) |
 
 #### Date formatting examples
 
@@ -174,15 +174,15 @@ author: <%= it.bookDetails.author %>
 
 ## Settings
 
-| Setting | Description | Default |
-| --- | --- | --- |
-| **Destination folder** | Where to save imported highlights | _(vault root)_ |
-| **Kobo SQLite path** | Remembered path to KoboReader.sqlite (auto-saved, read-only) | _(not set)_ |
-| **Template Path** | Path to a custom template file in your vault | _(default template)_ |
-| **Sort by chapter progress** | Sort highlights by position in book instead of creation date | Off |
-| **Import all books** | Import metadata for all books, not just those with highlights | Off |
-| **Import vocabulary** | Import looked-up words from Kobo's My Words feature | Off |
-| **Vocabulary file name** | Name of the vocabulary file (without .md extension) | Kobo Vocabulary |
+| Setting                      | Description                                                   | Default              |
+| ---------------------------- | ------------------------------------------------------------- | -------------------- |
+| **Destination folder**       | Where to save imported highlights                             | _(vault root)_       |
+| **Kobo SQLite path**         | Remembered path to KoboReader.sqlite (auto-saved, read-only)  | _(not set)_          |
+| **Template Path**            | Path to a custom template file in your vault                  | _(default template)_ |
+| **Sort by chapter progress** | Sort highlights by position in book instead of creation date  | Off                  |
+| **Import all books**         | Import metadata for all books, not just those with highlights | Off                  |
+| **Import vocabulary**        | Import looked-up words from Kobo's My Words feature           | Off                  |
+| **Vocabulary file name**     | Name of the vocabulary file (without .md extension)           | Kobo Vocabulary      |
 
 ## Helping Screenshots
 

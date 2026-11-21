@@ -11,17 +11,13 @@ describe("contentMerger", function () {
 		it("extracts content from heading to EOF when last section", function () {
 			const content = `# Book\n\n## Highlights\n\ntext\n\n## Personal Notes\n\nMy thoughts.`;
 			const result = extractPersonalNotes(content);
-			expect(result).to.equal(
-				"## Personal Notes\n\nMy thoughts.",
-			);
+			expect(result).to.equal("## Personal Notes\n\nMy thoughts.");
 		});
 
 		it("extracts content from heading to next ## heading", function () {
 			const content = `# Book\n\n## Personal Notes\n\nMy thoughts.\n\n## Description\n\nA book.`;
 			const result = extractPersonalNotes(content);
-			expect(result).to.equal(
-				"## Personal Notes\n\nMy thoughts.",
-			);
+			expect(result).to.equal("## Personal Notes\n\nMy thoughts.");
 		});
 
 		it("handles subheadings inside personal notes", function () {
@@ -41,9 +37,7 @@ describe("contentMerger", function () {
 		it("uses last occurrence if heading appears multiple times", function () {
 			const content = `## Personal Notes\n\nFirst one\n\n## Highlights\n\n## Personal Notes\n\nSecond one\n\n## Description`;
 			const result = extractPersonalNotes(content);
-			expect(result).to.equal(
-				"## Personal Notes\n\nSecond one",
-			);
+			expect(result).to.equal("## Personal Notes\n\nSecond one");
 		});
 	});
 
@@ -75,9 +69,7 @@ describe("contentMerger", function () {
 			const personalNotes =
 				"## Personal Notes\n\nUser's preserved content.";
 			const result = mergeContent(newContent, personalNotes);
-			const count = (
-				result.match(/## Personal Notes/g) || []
-			).length;
+			const count = (result.match(/## Personal Notes/g) || []).length;
 			expect(count).to.equal(1);
 			expect(result).to.contain("User's preserved content.");
 			expect(result).to.contain("## Highlights");
@@ -87,9 +79,7 @@ describe("contentMerger", function () {
 			const newContent =
 				"# Book\n\n## Personal Notes\n\n## Highlights\n\ntext";
 			const result = mergeContent(newContent, null);
-			const count = (
-				result.match(/## Personal Notes/g) || []
-			).length;
+			const count = (result.match(/## Personal Notes/g) || []).length;
 			expect(count).to.equal(1);
 			expect(result).to.contain("## Highlights");
 		});

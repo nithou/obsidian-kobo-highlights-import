@@ -94,9 +94,7 @@ export class HighlightService {
 		let content = this.repo.getContentByContentId(bookmark.contentId);
 
 		if (content == null) {
-			content = this.repo.getContentLikeContentId(
-				bookmark.contentId,
-			);
+			content = this.repo.getContentLikeContentId(bookmark.contentId);
 			if (content == null) {
 				console.warn(
 					`bookmark seems to link to a non existing content: ${bookmark.contentId}`,
@@ -116,10 +114,7 @@ export class HighlightService {
 		if (content.chapterIdBookmarked == null) {
 			return {
 				bookmark: bookmark,
-				content: this.findRightContentForBookmark(
-					bookmark,
-					content,
-				),
+				content: this.findRightContentForBookmark(bookmark, content),
 			};
 		}
 
@@ -143,9 +138,7 @@ export class HighlightService {
 		}
 
 		const contents =
-			this.repo.getAllContentByBookTitleOrderedByContentId(
-				bookTitle,
-			);
+			this.repo.getAllContentByBookTitleOrderedByContentId(bookTitle);
 		const potential =
 			this.repo.getFirstContentLikeContentIdWithBookmarkIdNotNull(
 				originalContent.contentId,

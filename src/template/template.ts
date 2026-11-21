@@ -45,10 +45,7 @@ function preprocessShorthandSyntax(template: string): string {
 	);
 
 	for (const [key, etaCode] of Object.entries(SHORTHAND_MAP)) {
-		const pattern = new RegExp(
-			`\\{\\s*\\{\\s*${key}\\s*\\}\\s*\\}`,
-			"g",
-		);
+		const pattern = new RegExp(`\\{\\s*\\{\\s*${key}\\s*\\}\\s*\\}`, "g");
 		result = result.replace(pattern, etaCode);
 	}
 

@@ -298,8 +298,7 @@ describe("HighlightService", async function () {
 					return;
 				}
 
-				const highlight =
-					service.createHighlightFromBookmark(bookmark);
+				const highlight = service.createHighlightFromBookmark(bookmark);
 				assert.deepEqual(highlight, {
 					content: content,
 					bookmark: bookmark,

@@ -33,8 +33,7 @@ describe("Repository", async function () {
 		const bookmarks = await repo.getAllBookmark();
 		chai.expect(bookmarks.length).to.be.above(0);
 		const first = bookmarks[0];
-		chai.expect(await repo.getBookmarkById(first.bookmarkId)).is.not
-			.null;
+		chai.expect(await repo.getBookmarkById(first.bookmarkId)).is.not.null;
 	});
 	it("extracts bookmark color", async function () {
 		const SQLEngine = await SqlJs({
@@ -191,7 +190,9 @@ describe("Repository", async function () {
 			chai.expect(words).to.have.length(3);
 			chai.expect(words[0].text).to.equal("Wanderlust");
 			chai.expect(words[0].dictSuffix).to.equal("-de");
-			chai.expect(words[0].volumeId).to.equal("file:///mnt/onboard/book3.epub");
+			chai.expect(words[0].volumeId).to.equal(
+				"file:///mnt/onboard/book3.epub",
+			);
 			chai.expect(words[0].dateCreated).to.be.instanceOf(Date);
 
 			wordDb.close();

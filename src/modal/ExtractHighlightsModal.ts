@@ -9,10 +9,7 @@ import { Highlight } from "src/database/interfaces";
 import { Repository } from "src/database/repository";
 import { ImportContext } from "src/errors/ImportContext";
 import { KoboHighlightsImporterSettings } from "src/settings/Settings";
-import {
-	extractPersonalNotes,
-	mergeContent,
-} from "src/sync/contentMerger";
+import { extractPersonalNotes, mergeContent } from "src/sync/contentMerger";
 import { applyTemplateTransformations } from "src/template/template";
 import { getTemplateContents } from "src/template/templateContents";
 import { applyVocabularyTemplate } from "src/template/vocabularyTemplate";
@@ -205,14 +202,11 @@ export class ExtractHighlightsModal extends Modal {
 		fileName: string,
 		newContent: string,
 	): Promise<void> {
-		const existingFile =
-			this.app.vault.getAbstractFileByPath(fileName);
+		const existingFile = this.app.vault.getAbstractFileByPath(fileName);
 
 		if (existingFile instanceof TFile) {
-			const existingContent =
-				await this.app.vault.read(existingFile);
-			const personalNotes =
-				extractPersonalNotes(existingContent);
+			const existingContent = await this.app.vault.read(existingFile);
+			const personalNotes = extractPersonalNotes(existingContent);
 			const merged = mergeContent(newContent, personalNotes);
 			await this.app.vault.modify(existingFile, merged);
 		} else {
