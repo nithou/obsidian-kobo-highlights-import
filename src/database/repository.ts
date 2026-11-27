@@ -27,7 +27,7 @@ export class Repository {
 
 		if (res[0].values == undefined) {
 			console.warn(
-				"Bookmarks table returend no results, do you have any annotations created?",
+				"Bookmarks table returned no results, do you have any annotations created?",
 			);
 
 			return bookmarks;
@@ -53,6 +53,8 @@ export class Repository {
 				contentId: row[2].toString(),
 				note: row[3]?.toString(),
 				dateCreated: new Date(row[4].toString()),
+				chapterProgress:
+					row[5] != null ? +row[5].toString() : undefined,
 				color: row[6]?.toString(),
 			});
 		});
@@ -71,7 +73,7 @@ export class Repository {
 	getBookmarkById(id: string): Bookmark | null {
 		const colorColumn = this.getBookmarkColorColumnSelection();
 		const statement = this.db.prepare(
-			`select BookmarkID, Text, ContentID, annotation, DateCreated, ${colorColumn} from Bookmark where BookmarkID = $id;`,
+			`select BookmarkID, Text, ContentID, annotation, DateCreated, ChapterProgress, ${colorColumn} from Bookmark where BookmarkID = $id;`,
 			{
 				$id: id,
 			},
@@ -93,7 +95,8 @@ export class Repository {
 			contentId: row[2].toString(),
 			note: row[3]?.toString(),
 			dateCreated: new Date(row[4].toString()),
-			color: row[5]?.toString(),
+			chapterProgress: row[5] != null ? +row[5].toString() : undefined,
+			color: row[6]?.toString(),
 		};
 	}
 
@@ -241,10 +244,15 @@ export class Repository {
 	}
 
 	getAllBookDetails(): BookDetails[] {
+		// One row per title. Ordering makes the book row (ContentType = 6, the
+		// EPUB/kepub container) come first, then rows that actually carry an
+		// author, so the first row seen for a title is the most complete one.
+		// `GROUP BY Title` was picking an arbitrary row per title, which could
+		// be a chapter sharing the book title and therefore authorless.
 		const statement = this.db.prepare(
 			`SELECT
                 Title,
-                Attribution as Author,
+                Attribution,
                 Description,
                 Publisher,
                 DateLastRead,
@@ -255,12 +263,11 @@ export class Repository {
                 SeriesNumber,
                 TimeSpentReading
             FROM content
-            WHERE Title IS NOT NULL
-            GROUP BY Title
-            ORDER BY Title ASC;`,
+            WHERE Title IS NOT NULL AND Attribution IS NOT NULL
+            ORDER BY Title ASC, (ContentType = 6) DESC, (___PercentRead IS NOT NULL) DESC;`,
 		);
 
-		const books: BookDetails[] = [];
+		const books = new Map<string, BookDetails>();
 
 		while (statement.step()) {
 			const row = statement.get();
@@ -268,8 +275,13 @@ export class Repository {
 				continue;
 			}
 
-			books.push({
-				title: row[0].toString(),
+			const title = row[0].toString();
+			if (books.has(title)) {
+				continue;
+			}
+
+			books.set(title, {
+				title,
 				author: row[1].toString(),
 				description: row[2]?.toString(),
 				publisher: row[3]?.toString(),
@@ -284,7 +296,7 @@ export class Repository {
 		}
 
 		statement.free();
-		return books;
+		return [...books.values()];
 	}
 
 	private parseContentStatement(statement: Statement): Content[] {

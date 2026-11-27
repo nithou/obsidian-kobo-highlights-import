@@ -6,6 +6,8 @@ export interface Bookmark {
 	note?: string;
 	dateCreated: Date;
 	color?: string;
+	/** Kobo's ChapterProgress: reading progress inside the bookmarked spine item. */
+	chapterProgress?: number;
 }
 
 export interface Content {
