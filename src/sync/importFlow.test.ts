@@ -5,7 +5,7 @@ import { HighlightService } from "../database/Highlight";
 import { Repository } from "../database/repository";
 import { Highlight } from "../database/interfaces";
 import { createFixtureDatabase } from "../database/fixtures/koboFixture";
-import { mergeImport } from "./contentMerger";
+import { isContentEquivalent, mergeImport } from "./contentMerger";
 import {
 	applyTemplateTransformations,
 	defaultAppendTemplate,
@@ -108,5 +108,53 @@ describe("import pipeline", function () {
 		expect(rendered.startsWith("## Kobo Highlights")).to.be.true;
 		expect(rendered).to.contain("Appended highlight");
 		expect(rendered).not.to.contain("---");
+	});
+
+	it("produces an identical note when nothing changed on the device", function () {
+		const first = mergeImport(renderBook(), null).content;
+		const second = mergeImport(renderBook(), first).content;
+
+		expect(isContentEquivalent(first, second)).to.be.true;
+	});
+
+	it("detects a highlight added on the device", async function () {
+		const otherDb = await createFixtureDatabase();
+		const otherService = new HighlightService(new Repository(otherDb));
+
+		const render = () =>
+			applyTemplateTransformations(
+				defaultTemplate,
+				otherService.buildChapterList(
+					otherService
+						.getAllHighlight(true)
+						.filter(
+							(h) =>
+								(h.content.bookTitle ?? "").trim() ===
+								"Nemesis Games",
+						),
+				),
+				otherService.getBookDetailsFromBookTitle("Nemesis Games"),
+			);
+
+		const before = mergeImport(render(), null).content;
+
+		const chapterTwo = otherDb.exec(
+			"select ContentID from content where Title = 'Chapter Two';",
+		)[0].values[0][0] as string;
+
+		otherDb.run(
+			`INSERT INTO Bookmark
+				(BookmarkID, Text, ContentID, annotation, DateCreated, ChapterProgress, Color)
+			 VALUES ('bookmark-new', 'A brand new highlight', '${chapterTwo}',
+				NULL, '2024-09-01T00:00:00Z', 0.7, 2);`,
+		);
+
+		const after = mergeImport(render(), before).content;
+
+		expect(isContentEquivalent(before, after)).to.be.false;
+		expect(after).to.contain("A brand new highlight");
+		expect(after.match(/First highlight/g)).to.have.length(1);
+
+		otherDb.close();
 	});
 });

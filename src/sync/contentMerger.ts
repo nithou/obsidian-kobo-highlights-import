@@ -92,15 +92,39 @@ export function looksPluginGenerated(content: string): boolean {
 	);
 }
 
+function normalizeForComparison(content: string): string {
+	return content
+		.replace(/\r\n/g, "\n")
+		.split("\n")
+		.map((line) => line.trimEnd())
+		.join("\n")
+		.trim();
+}
+
+/**
+ * True when writing `next` over `existing` would not change anything the user
+ * can see. Used to skip writes on re-import: no vault event, no sync churn, no
+ * git diff for books that did not change.
+ */
+export function isContentEquivalent(existing: string, next: string): boolean {
+	return normalizeForComparison(existing) === normalizeForComparison(next);
+}
+
 export function mergeContent(
 	newContent: string,
 	personalNotes: string | null,
 ): string {
-	const section = personalNotes ?? `${PERSONAL_NOTES_HEADING}\n`;
+	const section = (personalNotes ?? PERSONAL_NOTES_HEADING).trimEnd();
+	const before = (() => {
+		const idx = newContent.lastIndexOf(PERSONAL_NOTES_HEADING);
+		return idx === -1
+			? newContent.trimEnd()
+			: newContent.substring(0, idx).trimEnd();
+	})();
 
 	const placeholderIdx = newContent.lastIndexOf(PERSONAL_NOTES_HEADING);
 	if (placeholderIdx === -1) {
-		return `${newContent.trimEnd()}\n\n${section}`;
+		return `${before}\n\n${section}`;
 	}
 
 	const afterPlaceholder = placeholderIdx + PERSONAL_NOTES_HEADING.length;
@@ -108,14 +132,10 @@ export function mergeContent(
 	const nextHeadingMatch = rest.search(/^## /m);
 
 	if (nextHeadingMatch === -1) {
-		const before = newContent.substring(0, placeholderIdx).trimEnd();
 		return `${before}\n\n${section}`;
 	}
 
-	const before = newContent.substring(0, placeholderIdx).trimEnd();
-	const after = newContent
-		.substring(afterPlaceholder + nextHeadingMatch)
-		.trimStart();
+	const after = rest.substring(nextHeadingMatch).trimStart();
 
 	return `${before}\n\n${section}\n\n${after}`;
 }

@@ -1,7 +1,10 @@
 export class ImportContext {
 	booksImported = 0;
+	booksUnchanged = 0;
 	highlightsImported = 0;
+	highlightsUnchanged = 0;
 	wordsImported = 0;
+	wordsUnchanged = 0;
 	warnings: string[] = [];
 
 	addWarning(msg: string): void {
@@ -17,10 +20,20 @@ export class ImportContext {
 			);
 		}
 
+		if (this.booksUnchanged > 0) {
+			parts.push(
+				`${this.booksUnchanged} book${this.booksUnchanged !== 1 ? "s" : ""} unchanged`,
+			);
+		}
+
 		if (this.wordsImported > 0) {
 			parts.push(
 				`${this.wordsImported} vocabulary word${this.wordsImported !== 1 ? "s" : ""}`,
 			);
+		}
+
+		if (this.wordsUnchanged > 0) {
+			parts.push("vocabulary unchanged");
 		}
 
 		if (parts.length === 0) {

@@ -2,6 +2,7 @@
 import { expect } from "chai";
 import {
 	extractPersonalNotes,
+	isContentEquivalent,
 	looksPluginGenerated,
 	managedHeadingsAfterPlaceholder,
 	mergeContent,
@@ -110,7 +111,7 @@ describe("contentMerger", function () {
 			const result = mergeContent("# Book\n\n## Highlights", null);
 			expect(result).to.contain("# Book");
 			expect(result).to.contain("## Highlights");
-			expect(result).to.contain("## Personal Notes\n");
+			expect(result).to.contain("## Personal Notes");
 		});
 
 		it("preserves personal notes in middle of document", function () {
@@ -200,6 +201,27 @@ describe("contentMerger", function () {
 
 			expect(result.preservedForeignContent).to.be.false;
 			expect(result.content).not.to.contain("legacy text");
+		});
+	});
+
+	describe("isContentEquivalent", function () {
+		it("is true for identical content", function () {
+			expect(isContentEquivalent("# Book\n\ntext", "# Book\n\ntext")).to
+				.be.true;
+		});
+
+		it("ignores line endings, trailing spaces and trailing newlines", function () {
+			expect(
+				isContentEquivalent(
+					"# Book\r\n\r\ntext  \r\n",
+					"# Book\n\ntext\n\n",
+				),
+			).to.be.true;
+		});
+
+		it("is false when a highlight changed", function () {
+			expect(isContentEquivalent("# Book\n\nold", "# Book\n\nnew")).to.be
+				.false;
 		});
 	});
 });

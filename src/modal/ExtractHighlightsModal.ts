@@ -9,7 +9,7 @@ import { Highlight } from "src/database/interfaces";
 import { Repository } from "src/database/repository";
 import { ImportContext } from "src/errors/ImportContext";
 import { KoboHighlightsImporterSettings } from "src/settings/Settings";
-import { mergeImport } from "src/sync/contentMerger";
+import { isContentEquivalent, mergeImport } from "src/sync/contentMerger";
 import { applyTemplateTransformations } from "src/template/template";
 import { getTemplateContents } from "src/template/templateContents";
 import { applyVocabularyTemplate } from "src/template/vocabularyTemplate";
@@ -128,12 +128,25 @@ export class ExtractHighlightsModal extends Modal {
 				details,
 			);
 
-			await this.writeFileNonDestructive(fileName, newContent, context);
+			const outcome = await this.writeFileNonDestructive(
+				fileName,
+				newContent,
+				context,
+			);
+
+			const highlightCount = chapters.reduce(
+				(total, [, bookmarks]) => total + bookmarks.length,
+				0,
+			);
+
+			if (outcome === "unchanged") {
+				context.booksUnchanged++;
+				context.highlightsUnchanged += highlightCount;
+				continue;
+			}
 
 			context.booksImported++;
-			for (const [, bookmarks] of chapters) {
-				context.highlightsImported += bookmarks.length;
-			}
+			context.highlightsImported += highlightCount;
 		}
 	}
 
@@ -177,8 +190,17 @@ export class ExtractHighlightsModal extends Modal {
 			);
 
 			const newContent = applyVocabularyTemplate(words);
-			await this.writeFileNonDestructive(fileName, newContent, context);
-			context.wordsImported = words.length;
+			const outcome = await this.writeFileNonDestructive(
+				fileName,
+				newContent,
+				context,
+			);
+
+			if (outcome === "unchanged") {
+				context.wordsUnchanged = words.length;
+			} else {
+				context.wordsImported = words.length;
+			}
 		} catch (e) {
 			const msg = e instanceof Error ? e.message : String(e);
 			context.addWarning(`Vocabulary import failed: ${msg}`);
@@ -233,7 +255,7 @@ export class ExtractHighlightsModal extends Modal {
 		fileName: string,
 		newContent: string,
 		context: ImportContext,
-	): Promise<void> {
+	): Promise<"written" | "unchanged"> {
 		const existingFile = this.app.vault.getAbstractFileByPath(fileName);
 
 		if (existingFile instanceof TFile) {
@@ -246,8 +268,12 @@ export class ExtractHighlightsModal extends Modal {
 				);
 			}
 
+			if (isContentEquivalent(existingContent, result.content)) {
+				return "unchanged";
+			}
+
 			await this.app.vault.modify(existingFile, result.content);
-			return;
+			return "written";
 		}
 
 		await this.ensureFolderExists(fileName);
@@ -255,6 +281,8 @@ export class ExtractHighlightsModal extends Modal {
 			fileName,
 			mergeImport(newContent, null).content,
 		);
+
+		return "written";
 	}
 
 	onOpen() {
