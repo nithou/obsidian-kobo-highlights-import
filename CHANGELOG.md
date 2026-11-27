@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.1.2](https://github.com/nithou/obsidian-kobo-highlights-import/compare/6.1.1...6.1.2) (2026-11-27)
+
+### Bug Fixes
+
+- the vocabulary note is no longer rewritten on every import. Its `date_updated` field was the current timestamp, so the unchanged-file detection added in 6.1.1 could never match for it. The field now reflects the most recent vocabulary entry date, which is what the file actually describes.
+
 ## [6.1.1](https://github.com/nithou/obsidian-kobo-highlights-import/compare/6.1.0...6.1.1) (2026-11-27)
 
 ### Performance

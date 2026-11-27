@@ -20,10 +20,32 @@ date_updated: "<%= it.dateUpdated %>"
 ## Personal Notes
 `;
 
+/**
+ * Most recent lookup date across the words. It derives from the data on
+ * purpose: a "now" timestamp would make the rendered file differ on every run
+ * and defeat the unchanged-file detection, rewriting the vocabulary note (and
+ * bumping it into Obsidian Sync) for nothing.
+ */
+function latestWordDate(words: Word[]): Date | undefined {
+	let latest: Date | undefined;
+
+	for (const word of words) {
+		if (!word.dateCreated) {
+			continue;
+		}
+		if (!latest || word.dateCreated.getTime() > latest.getTime()) {
+			latest = word.dateCreated;
+		}
+	}
+
+	return latest;
+}
+
 export function applyVocabularyTemplate(words: Word[]): string {
+	const dateUpdated = latestWordDate(words);
 	const rendered = eta.renderString(defaultVocabularyTemplate, {
 		words,
-		dateUpdated: new Date().toISOString(),
+		dateUpdated: dateUpdated ? dateUpdated.toISOString() : "",
 	});
 
 	if (rendered === null) {

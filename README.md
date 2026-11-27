@@ -79,7 +79,7 @@ Notes that were **not** created by this plugin are never overwritten. If a note 
 
 The plugin can import words you've looked up on your Kobo device (the "My Words" feature). Enable this in settings with the **Import vocabulary** toggle.
 
-All vocabulary words are saved to a single file (default: `Kobo Vocabulary.md`) in your destination folder. The file includes each word with its dictionary language and the date it was looked up. Like book notes, the vocabulary file supports non-destructive sync with a Personal Notes section.
+All vocabulary words are saved to a single file (default: `Kobo Vocabulary.md`) in your destination folder. The file includes each word with its dictionary language and the date it was looked up; its `date_updated` frontmatter is the date of the most recent entry, so importing an unchanged device does not touch the file. Like book notes, the vocabulary file supports non-destructive sync with a Personal Notes section.
 
 ## Templating
 
