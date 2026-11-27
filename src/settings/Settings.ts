@@ -7,6 +7,7 @@ export const DEFAULT_SETTINGS: KoboHighlightsImporterSettings = {
 	storageFolder: "",
 	sortByChapterProgress: false,
 	templatePath: "",
+	appendTemplatePath: "",
 	importAllBooks: false,
 	importVocabulary: false,
 	vocabularyFilePath: "Kobo Vocabulary",
@@ -17,6 +18,7 @@ export interface KoboHighlightsImporterSettings {
 	storageFolder: string;
 	sortByChapterProgress: boolean;
 	templatePath: string;
+	appendTemplatePath: string;
 	importAllBooks: boolean;
 	importVocabulary: boolean;
 	vocabularyFilePath: string;
@@ -38,6 +40,7 @@ export class KoboHighlightsImporterSettingsTab extends PluginSettingTab {
 		this.add_destination_folder();
 		this.add_sqlite_path();
 		this.add_template_path();
+		this.add_append_template_path();
 		this.add_sort_by_chapter_progress();
 		this.add_import_all_books();
 		this.add_import_vocabulary();
@@ -63,7 +66,7 @@ export class KoboHighlightsImporterSettingsTab extends PluginSettingTab {
 		new Setting(this.containerEl)
 			.setName("Kobo SQLite path")
 			.setDesc(
-				"Remembered path to KoboReader.sqlite. Cleared automatically if the file is not found at this location.",
+				"Remembered path to KoboReader.sqlite. Clear it if the file moved.",
 			)
 			.addText((cb) => {
 				cb.setDisabled(true).setValue(
@@ -94,6 +97,24 @@ export class KoboHighlightsImporterSettingsTab extends PluginSettingTab {
 			});
 	}
 
+	add_append_template_path(): void {
+		new Setting(this.containerEl)
+			.setName("Append template path")
+			.setDesc(
+				"Template used when appending highlights to an existing note. Leave empty to use the built-in highlights-only template.",
+			)
+			.addSearch((cb) => {
+				new FileSuggestor(this.app, cb.inputEl);
+				cb.setPlaceholder("Example: templates/kobo-append")
+					.setValue(this.plugin.settings.appendTemplatePath)
+					.onChange(async (newTemplatePath) => {
+						this.plugin.settings.appendTemplatePath =
+							newTemplatePath;
+						await this.plugin.saveSettings();
+					});
+			});
+	}
+
 	add_sort_by_chapter_progress(): void {
 		const desc = document.createDocumentFragment();
 		desc.append(
@@ -108,7 +129,7 @@ export class KoboHighlightsImporterSettingsTab extends PluginSettingTab {
 					this.plugin.settings.sortByChapterProgress,
 				).onChange((toggle) => {
 					this.plugin.settings.sortByChapterProgress = toggle;
-					this.plugin.saveSettings();
+					void this.plugin.saveSettings();
 				});
 			});
 	}
