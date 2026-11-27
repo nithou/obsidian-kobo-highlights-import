@@ -1,5 +1,15 @@
 # Changelog
 
+## [6.1.1](https://github.com/nithou/obsidian-kobo-highlights-import/compare/6.1.0...6.1.1) (2026-11-27)
+
+### Performance
+
+- re-importing only writes the notes that actually changed. Unchanged books (and an unchanged vocabulary file) are now detected by comparing the rendered output with the file on disk: no write, no vault event, no sync or git churn. The import summary reports them as "unchanged".
+
+### Bug Fixes
+
+- the generated note is byte-identical between two imports, so a second import with nothing new is a true no-op
+
 ## [6.1.0](https://github.com/nithou/obsidian-kobo-highlights-import/compare/6.0.0...6.1.0) (2026-11-27)
 
 ### Features

@@ -1,7 +1,7 @@
 {
 	"id": "obsidian-kobo-highlights-importer-plugin",
 	"name": "Kobo Highlights Importer",
-	"version": "6.1.0",
+	"version": "6.1.1",
 	"minAppVersion": "1.4.10",
 	"description": "Import highlights and vocabulary from your Kobo device",
 	"author": "Kevin Hellemun",

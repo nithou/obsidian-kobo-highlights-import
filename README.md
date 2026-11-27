@@ -71,6 +71,8 @@ When you re-import highlights, the plugin preserves any personal content you've 
 
 The plugin regenerates all other sections (frontmatter, description, highlights) from the Kobo database, so your highlights are always up to date while your personal notes remain untouched. Your own level-2 headings inside `## Personal Notes` are preserved as well: only the headings the template itself regenerates end the section.
 
+Only notes whose rendered content actually changed are written: re-importing a device with no new highlights touches nothing, so Obsidian Sync and git see no churn.
+
 Notes that were **not** created by this plugin are never overwritten. If a note with the same name already exists and does not look like a generated note, its whole body is kept under `## Personal Notes` and a warning tells you which file was affected.
 
 ## Vocabulary import (My Words)
