@@ -1,4 +1,5 @@
 import { addIcon, Plugin } from "obsidian";
+import { AppendHighlightsModal } from "./modal/AppendHighlightsModal";
 import { ExtractHighlightsModal } from "./modal/ExtractHighlightsModal";
 import {
 	DEFAULT_SETTINGS,
@@ -17,28 +18,46 @@ export default class KoboHighlightsImporter extends Plugin {
 
 		const saveSettings = () => this.saveSettings();
 
+		const openImportModal = () => {
+			new ExtractHighlightsModal(
+				this.app,
+				this.settings,
+				saveSettings,
+			).open();
+		};
+
 		const KoboHighlightsImporterIconEl = this.addRibbonIcon(
 			"e-reader",
 			"Import from Kobo",
-			() => {
-				new ExtractHighlightsModal(
-					this.app,
-					this.settings,
-					saveSettings,
-				).open();
-			},
+			openImportModal,
 		);
 		KoboHighlightsImporterIconEl.addClass("kobo-highlights-importer-icon");
 
 		this.addCommand({
 			id: "import-from-kobo-sqlite",
 			name: "Import from Kobo",
-			callback: () => {
-				new ExtractHighlightsModal(
-					this.app,
-					this.settings,
-					saveSettings,
-				).open();
+			callback: openImportModal,
+		});
+
+		this.addCommand({
+			id: "append-kobo-highlights-to-note",
+			name: "Append highlights to current note",
+			checkCallback: (checking) => {
+				const activeFile = this.app.workspace.getActiveFile();
+				if (!activeFile || activeFile.extension !== "md") {
+					return false;
+				}
+
+				if (!checking) {
+					new AppendHighlightsModal(
+						this.app,
+						this.settings,
+						saveSettings,
+						activeFile,
+					).open();
+				}
+
+				return true;
 			},
 		});
 

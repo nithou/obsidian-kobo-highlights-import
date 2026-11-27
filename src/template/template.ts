@@ -79,6 +79,15 @@ timeSpentReading: <%= it.bookDetails.timeSpentReading ?? '' %>
 ${HIGHLIGHTS_BLOCK}
 `;
 
+/**
+ * Template used by "Append highlights to current note": highlights only, no
+ * frontmatter or title, because the note already exists.
+ */
+export const defaultAppendTemplate = `## Kobo Highlights
+
+${HIGHLIGHTS_BLOCK}
+`;
+
 export function applyTemplateTransformations(
 	rawTemplate: string,
 	chapters: [chapter, Bookmark[]][],
