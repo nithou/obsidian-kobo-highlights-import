@@ -2,8 +2,15 @@
 
 This plugin imports highlights and vocabulary from Kobo e-readers into your Obsidian vault.
 
+> **This is a maintained fork of
+> [OGKevin/obsidian-kobo-highlights-import](https://github.com/OGKevin/obsidian-kobo-highlights-import).**
+> It adds non-destructive sync, vocabulary import, appending to an existing note, a template
+> shorthand syntax and a few bug fixes that are not in the upstream releases yet.
+
 - [Obsidian Kobo Highlight Importer](#obsidian-kobo-highlight-importer)
+    - [Installation](#installation)
     - [How to use](#how-to-use)
+    - [Appending highlights to an existing note](#appending-highlights-to-an-existing-note)
     - [Non-destructive sync](#non-destructive-sync)
     - [Vocabulary import (My Words)](#vocabulary-import-my-words)
     - [Templating](#templating)
@@ -13,6 +20,20 @@ This plugin imports highlights and vocabulary from Kobo e-readers into your Obsi
     - [Settings](#settings)
     - [Helping Screenshots](#helping-screenshots)
     - [Contributing](#contributing)
+
+## Installation
+
+The plugin is not published to the Obsidian community store, so install it manually or with
+[BRAT](https://github.com/TfTHacker/obsidian42-brat):
+
+1. Download `main.js`, `manifest.json` and `styles.css` from the
+   [latest release](https://github.com/nithou/obsidian-kobo-highlights-import/releases/latest)
+2. Put them in `<your vault>/.obsidian/plugins/obsidian-kobo-highlights-importer-plugin/`
+3. Reload Obsidian and enable **Kobo Highlights Importer** in _Settings → Community plugins_
+
+With BRAT, add `nithou/obsidian-kobo-highlights-import` as a beta plugin.
+
+Requires Obsidian 1.4.10 or newer and the desktop app (the plugin reads a SQLite file from disk).
 
 ## How to use
 
@@ -26,13 +47,31 @@ Once installed, the steps to import your highlights directly into the vault are:
    hidden files view from system configs)
 5. Click Extract
 
-The plugin remembers the path to your KoboReader.sqlite file between sessions. On subsequent imports, it will auto-load the file without needing to re-select it. You can clear the remembered path in settings.
+The plugin remembers the path to your `KoboReader.sqlite` file between sessions. On subsequent imports, it will
+auto-load the file without needing to re-select it. You can clear the remembered path in settings.
+
+## Appending highlights to an existing note
+
+If you write your own note for a book and only want the highlights appended to it, use the
+**Append highlights to current note** command (`Ctrl/Cmd+P` → _Append highlights to current note_).
+
+The plugin matches the active note to a Kobo book using, in order:
+
+1. the `isbn` field of the note frontmatter
+2. the `title` frontmatter field, then the file name
+3. a fuzzy book picker, pre-filled with the note name
+
+Only the highlights are appended — nothing in the existing note is rewritten — and highlights that
+are already present in the note are skipped, so running the command twice is safe. The appended
+block is rendered with the _Append template path_ setting (a highlights-only template by default).
 
 ## Non-destructive sync
 
 When you re-import highlights, the plugin preserves any personal content you've added to your book notes. Each generated file includes a `## Personal Notes` section — everything under this heading is kept intact across re-imports. By default, this section is placed after the title heading, before Description and Highlights, but you can position it anywhere in your custom template.
 
-The plugin regenerates all other sections (frontmatter, description, highlights) from the Kobo database, so your highlights are always up to date while your personal notes remain untouched.
+The plugin regenerates all other sections (frontmatter, description, highlights) from the Kobo database, so your highlights are always up to date while your personal notes remain untouched. Your own level-2 headings inside `## Personal Notes` are preserved as well: only the headings the template itself regenerates end the section.
+
+Notes that were **not** created by this plugin are never overwritten. If a note with the same name already exists and does not look like a generated note, its whole body is kept under `## Personal Notes` and a warning tells you which file was affected.
 
 ## Vocabulary import (My Words)
 
@@ -121,12 +160,12 @@ You can mix both syntaxes in the same template. See the [Eta.js template syntax 
 
 The following variables are available in Eta templates:
 
-| Variable      | Type / Structure                     | Description                                                                                                                                                                                                                                                   |
-| ------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bookDetails` | Object                               | Book metadata: `title`, `author`, `publisher`, `dateLastRead`, `readStatus`, `percentRead`, `isbn`, `series`, `seriesNumber`, `timeSpentReading`, `description`                                                                                               |
-| `chapters`    | Array of `[chapterName, highlights]` | Each `highlights` is an array of bookmarks for that chapter                                                                                                                                                                                                   |
-| `ReadStatus`  | Enum mapping                         | Maps read status values to their string labels                                                                                                                                                                                                                |
-| `highlight`   | Object                               | Each highlight/bookmark: `bookmarkId`, `text`, `contentId`, `note` (optional annotation), `dateCreated` ([Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date)), `color` (optional: 0=yellow, 1=red, 2=blue, 3=green) |
+| Variable      | Type / Structure                     | Description                                                                                                                                                                                                                                                                                                                             |
+| ------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bookDetails` | Object                               | Book metadata: `title`, `author`, `publisher`, `dateLastRead`, `readStatus`, `percentRead`, `isbn`, `series`, `seriesNumber`, `timeSpentReading`, `description`                                                                                                                                                                         |
+| `chapters`    | Array of `[chapterName, highlights]` | Each `highlights` is an array of bookmarks for that chapter                                                                                                                                                                                                                                                                             |
+| `ReadStatus`  | Enum mapping                         | Maps read status values to their string labels                                                                                                                                                                                                                                                                                          |
+| `highlight`   | Object                               | Each highlight/bookmark: `bookmarkId`, `text`, `contentId`, `note` (optional annotation), `dateCreated` ([Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date)), `color` (optional: 0=yellow, 1=red, 2=blue, 3=green), `chapterProgress` (optional: 0-1 progress inside the bookmarked chapter) |
 
 #### Date formatting examples
 
@@ -179,6 +218,7 @@ author: <%= it.bookDetails.author %>
 | **Destination folder**       | Where to save imported highlights                             | _(vault root)_       |
 | **Kobo SQLite path**         | Remembered path to KoboReader.sqlite (auto-saved, read-only)  | _(not set)_          |
 | **Template Path**            | Path to a custom template file in your vault                  | _(default template)_ |
+| **Append template path**     | Template used by _Append highlights to current note_          | _(built-in)_         |
 | **Sort by chapter progress** | Sort highlights by position in book instead of creation date  | Off                  |
 | **Import all books**         | Import metadata for all books, not just those with highlights | Off                  |
 | **Import vocabulary**        | Import looked-up words from Kobo's My Words feature           | Off                  |
@@ -194,3 +234,15 @@ author: <%= it.bookDetails.author %>
 ## Contributing
 
 Please feel free to test, send feedback using Issues and open Pull Requests to improve the process.
+
+### Development
+
+```bash
+npm install
+npm test          # hermetic unit tests, no Kobo device needed
+npm run lint
+npm run build     # produces main.js
+```
+
+Tests build an in-memory Kobo database fixture, so no device dump or SOPS key is required. To run the
+optional suite against real data, drop a decrypted `KoboReader.sqlite` at the repository root.

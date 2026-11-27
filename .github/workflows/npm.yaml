@@ -11,15 +11,19 @@ jobs:
             id-token: write
             contents: read
             attestations: write
+        env:
+            # Optional: only the legacy real-device suite needs it. Forks do not
+            # carry this secret and the hermetic fixture suite still runs.
+            SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
         steps:
             - uses: actions/checkout@v6
             - name: Setup SOPS
+              if: env.SOPS_AGE_KEY != ''
               uses: nhedger/setup-sops@v2
               with:
                   version: "latest"
             - name: Decrypt database file
-              env:
-                  SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+              if: env.SOPS_AGE_KEY != ''
               run: |
                   sops --decrypt KoboReader.sqlite.enc > KoboReader.sqlite
             - name: Setup Node.js
@@ -30,6 +34,8 @@ jobs:
               run: npm install
             - name: Run lint
               run: npm run lint
+            - name: Check formatting
+              run: npm run format:check
             - name: Run tests
               run: npm run test
             - name: Run build
