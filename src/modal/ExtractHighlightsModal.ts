@@ -9,7 +9,7 @@ import { Highlight } from "src/database/interfaces";
 import { Repository } from "src/database/repository";
 import { ImportContext } from "src/errors/ImportContext";
 import { KoboHighlightsImporterSettings } from "src/settings/Settings";
-import { extractPersonalNotes, mergeContent } from "src/sync/contentMerger";
+import { mergeImport } from "src/sync/contentMerger";
 import { applyTemplateTransformations } from "src/template/template";
 import { getTemplateContents } from "src/template/templateContents";
 import { applyVocabularyTemplate } from "src/template/vocabularyTemplate";
@@ -117,10 +117,7 @@ export class ExtractHighlightsModal extends Modal {
 		);
 
 		for (const [bookTitle, bookHighlights] of highlightsByBook) {
-			const sanitizedBookName = sanitize(bookTitle);
-			const fileName = normalizePath(
-				`${this.settings.storageFolder}/${sanitizedBookName}.md`,
-			);
+			const fileName = this.buildBookFileName(bookTitle);
 
 			const chapters = service.buildChapterList(bookHighlights);
 			const details = service.getBookDetailsFromBookTitle(bookTitle);
@@ -131,13 +128,24 @@ export class ExtractHighlightsModal extends Modal {
 				details,
 			);
 
-			await this.writeFileNonDestructive(fileName, newContent);
+			await this.writeFileNonDestructive(fileName, newContent, context);
 
 			context.booksImported++;
 			for (const [, bookmarks] of chapters) {
 				context.highlightsImported += bookmarks.length;
 			}
 		}
+	}
+
+	private buildBookFileName(bookTitle: string): string {
+		const folder = this.settings.storageFolder
+			.trim()
+			.replace(/^\/+|\/+$/g, "");
+		const fileName = `${sanitize(bookTitle)}.md`;
+
+		return normalizePath(
+			folder.length > 0 ? `${folder}/${fileName}` : fileName,
+		);
 	}
 
 	private async importVocabulary(
@@ -158,12 +166,18 @@ export class ExtractHighlightsModal extends Modal {
 				return;
 			}
 
+			const folder = this.settings.storageFolder
+				.trim()
+				.replace(/^\/+|\/+$/g, "");
+			const vocabularyFile = `${sanitize(this.settings.vocabularyFilePath)}.md`;
 			const fileName = normalizePath(
-				`${this.settings.storageFolder}/${sanitize(this.settings.vocabularyFilePath)}.md`,
+				folder.length > 0
+					? `${folder}/${vocabularyFile}`
+					: vocabularyFile,
 			);
 
 			const newContent = applyVocabularyTemplate(words);
-			await this.writeFileNonDestructive(fileName, newContent);
+			await this.writeFileNonDestructive(fileName, newContent, context);
 			context.wordsImported = words.length;
 		} catch (e) {
 			const msg = e instanceof Error ? e.message : String(e);
@@ -198,21 +212,49 @@ export class ExtractHighlightsModal extends Modal {
 		}
 	}
 
+	private async ensureFolderExists(filePath: string): Promise<void> {
+		const parts = filePath.split("/");
+		parts.pop();
+
+		if (parts.length === 0) {
+			return;
+		}
+
+		let current = "";
+		for (const part of parts) {
+			current = current.length > 0 ? `${current}/${part}` : part;
+			if (!this.app.vault.getAbstractFileByPath(current)) {
+				await this.app.vault.createFolder(current);
+			}
+		}
+	}
+
 	private async writeFileNonDestructive(
 		fileName: string,
 		newContent: string,
+		context: ImportContext,
 	): Promise<void> {
 		const existingFile = this.app.vault.getAbstractFileByPath(fileName);
 
 		if (existingFile instanceof TFile) {
 			const existingContent = await this.app.vault.read(existingFile);
-			const personalNotes = extractPersonalNotes(existingContent);
-			const merged = mergeContent(newContent, personalNotes);
-			await this.app.vault.modify(existingFile, merged);
-		} else {
-			const merged = mergeContent(newContent, null);
-			await this.app.vault.adapter.write(fileName, merged);
+			const result = mergeImport(newContent, existingContent);
+
+			if (result.preservedForeignContent) {
+				context.addWarning(
+					`"${fileName}" was not created by this plugin: its previous content was kept under "## Personal Notes" instead of being overwritten`,
+				);
+			}
+
+			await this.app.vault.modify(existingFile, result.content);
+			return;
 		}
+
+		await this.ensureFolderExists(fileName);
+		await this.app.vault.create(
+			fileName,
+			mergeImport(newContent, null).content,
+		);
 	}
 
 	onOpen() {
@@ -238,7 +280,7 @@ export class ExtractHighlightsModal extends Modal {
 			const filePath = webUtils.getPathForFile(file);
 			if (filePath) {
 				this.settings.sqlitePath = filePath;
-				this.saveSettings();
+				void this.saveSettings();
 			}
 
 			const reader = new FileReader();
@@ -263,9 +305,9 @@ export class ExtractHighlightsModal extends Modal {
 			new Notice("Extracting highlights...");
 			this.fetchHighlights()
 				.then((context) => {
-					new Notice(context.toSummary());
-					if (context.warnings.length > 0) {
-						console.warn("Import warnings:", context.warnings);
+					new Notice(context.toSummary(), 10000);
+					for (const warning of context.warnings) {
+						console.warn("Kobo import warning:", warning);
 					}
 					this.close();
 				})
